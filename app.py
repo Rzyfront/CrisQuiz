@@ -204,11 +204,11 @@ def resultado(usuario_id):
       # Manejar casos donde correctas puede ser None (sin respuestas)
     correctas = stats['correctas'] if stats['correctas'] is not None else 0
     porcentaje = (correctas / total_preguntas * 100) if total_preguntas > 0 else 0
-    
-    return render_template('resultado.html',
+      return render_template('resultado.html',
                          usuario=usuario, 
                          stats=stats, 
                          total_preguntas=total_preguntas,
+                         total=total_preguntas,
                          porcentaje=round(porcentaje, 2),
                          correctas=correctas)
 
