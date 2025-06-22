@@ -65,11 +65,11 @@ def registro():
     """Registro de usuario"""
     if request.method == 'POST':
         nombre = request.form['nombre'].strip()
-        
-        if not nombre:
+          if not nombre:
             flash('El nombre es obligatorio', 'error')
             return redirect(url_for('registro'))
-          conn = get_db_connection()
+        
+        conn = get_db_connection()
         cursor = conn.execute(
             'INSERT INTO usuarios (nombre, fecha) VALUES (?, ?)',
             (nombre, datetime.now())
@@ -151,10 +151,10 @@ def responder():
     # Guardar la respuesta
     conn.execute(
         'INSERT INTO respuestas (usuario_id, pregunta_id, respuesta_usuario, es_correcta) VALUES (?, ?, ?, ?)',
-        (usuario_id, pregunta_id, respuesta_usuario, es_correcta)
-    )
+        (usuario_id, pregunta_id, respuesta_usuario, es_correcta)    )
     conn.commit()
-      # Mostrar si fue correcta o no
+    
+    # Mostrar si fue correcta o no
     if es_correcta:
         flash('¡Respuesta correcta!', 'success')
     else:
@@ -181,11 +181,11 @@ def resultado(usuario_id):
     conn = get_db_connection()
     
     # Obtener información del usuario
-    usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()
-    if not usuario:
+    usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()    if not usuario:
         flash('Usuario no encontrado', 'error')
         return redirect(url_for('index'))
-      # Obtener estadísticas del usuario
+    
+    # Obtener estadísticas del usuario
     stats = conn.execute('''
         SELECT 
             COUNT(*) as total_respuestas,
@@ -202,12 +202,12 @@ def resultado(usuario_id):
     # Manejar casos donde correctas puede ser None (sin respuestas)
     correctas = stats['correctas'] if stats['correctas'] is not None else 0
     porcentaje = (correctas / total_preguntas * 100) if total_preguntas > 0 else 0
-    
-    return render_template('resultado.html', 
+      return render_template('resultado.html', 
                          usuario=usuario, 
                          stats=stats, 
                          total_preguntas=total_preguntas,
-                         porcentaje=round(porcentaje, 2))
+                         porcentaje=round(porcentaje, 2),
+                         correctas=correctas)
 
 @app.route('/ranking')
 def ranking():
