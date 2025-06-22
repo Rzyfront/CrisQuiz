@@ -65,7 +65,8 @@ def registro():
     """Registro de usuario"""
     if request.method == 'POST':
         nombre = request.form['nombre'].strip()
-          if not nombre:
+        
+        if not nombre:
             flash('El nombre es obligatorio', 'error')
             return redirect(url_for('registro'))
         
@@ -151,7 +152,8 @@ def responder():
     # Guardar la respuesta
     conn.execute(
         'INSERT INTO respuestas (usuario_id, pregunta_id, respuesta_usuario, es_correcta) VALUES (?, ?, ?, ?)',
-        (usuario_id, pregunta_id, respuesta_usuario, es_correcta)    )
+        (usuario_id, pregunta_id, respuesta_usuario, es_correcta)
+    )
     conn.commit()
     
     # Mostrar si fue correcta o no
@@ -181,7 +183,8 @@ def resultado(usuario_id):
     conn = get_db_connection()
     
     # Obtener información del usuario
-    usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()    if not usuario:
+    usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()
+    if not usuario:
         flash('Usuario no encontrado', 'error')
         return redirect(url_for('index'))
     
@@ -198,11 +201,11 @@ def resultado(usuario_id):
     total_preguntas = conn.execute('SELECT COUNT(*) as count FROM preguntas').fetchone()['count']
     
     conn.close()
-    
-    # Manejar casos donde correctas puede ser None (sin respuestas)
+      # Manejar casos donde correctas puede ser None (sin respuestas)
     correctas = stats['correctas'] if stats['correctas'] is not None else 0
     porcentaje = (correctas / total_preguntas * 100) if total_preguntas > 0 else 0
-      return render_template('resultado.html', 
+    
+    return render_template('resultado.html',
                          usuario=usuario, 
                          stats=stats, 
                          total_preguntas=total_preguntas,
