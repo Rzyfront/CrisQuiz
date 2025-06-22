@@ -171,8 +171,7 @@ def resultado(usuario_id):
     if not usuario:
         flash('Usuario no encontrado', 'error')
         return redirect(url_for('index'))
-    
-    # Obtener estadísticas del usuario
+      # Obtener estadísticas del usuario
     stats = conn.execute('''
         SELECT 
             COUNT(*) as total_respuestas,
@@ -186,7 +185,9 @@ def resultado(usuario_id):
     
     conn.close()
     
-    porcentaje = (stats['correctas'] / total_preguntas * 100) if total_preguntas > 0 else 0
+    # Manejar casos donde correctas puede ser None (sin respuestas)
+    correctas = stats['correctas'] if stats['correctas'] is not None else 0
+    porcentaje = (correctas / total_preguntas * 100) if total_preguntas > 0 else 0
     
     return render_template('resultado.html', 
                          usuario=usuario, 
