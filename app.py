@@ -181,12 +181,21 @@ def responder():
 def resultado(usuario_id):
     """Mostrar resultado final del test"""
     conn = get_db_connection()
-    
-    # Obtener información del usuario
+      # Obtener información del usuario
     usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()
     if not usuario:
         flash('Usuario no encontrado', 'error')
         return redirect(url_for('index'))
+    
+    # Convertir fecha string a datetime object para usar strftime en el template
+    try:
+        fecha_dt = datetime.fromisoformat(usuario['fecha'].replace('Z', '+00:00'))
+    except:
+        fecha_dt = datetime.now()
+    
+    # Crear un diccionario con la información del usuario incluyendo fecha convertida
+    usuario_dict = dict(usuario)
+    usuario_dict['fecha'] = fecha_dt
     
     # Obtener estadísticas del usuario
     stats = conn.execute('''
@@ -195,17 +204,18 @@ def resultado(usuario_id):
             SUM(CASE WHEN es_correcta = 1 THEN 1 ELSE 0 END) as correctas,
             SUM(CASE WHEN es_correcta = 0 THEN 1 ELSE 0 END) as incorrectas
         FROM respuestas 
-        WHERE usuario_id = ?
-    ''', (usuario_id,)).fetchone()
+        WHERE usuario_id = ?    ''', (usuario_id,)).fetchone()
     
     total_preguntas = conn.execute('SELECT COUNT(*) as count FROM preguntas').fetchone()['count']
     
     conn.close()
-      # Manejar casos donde correctas puede ser None (sin respuestas)
+    
+    # Manejar casos donde correctas puede ser None (sin respuestas)
     correctas = stats['correctas'] if stats['correctas'] is not None else 0
     porcentaje = (correctas / total_preguntas * 100) if total_preguntas > 0 else 0
-      return render_template('resultado.html',
-                         usuario=usuario, 
+    
+    return render_template('resultado.html',
+                         usuario=usuario_dict, 
                          stats=stats, 
                          total_preguntas=total_preguntas,
                          total=total_preguntas,
@@ -216,8 +226,7 @@ def resultado(usuario_id):
 def ranking():
     """Mostrar ranking de mejores puntajes"""
     conn = get_db_connection()
-    
-    # Obtener ranking de usuarios con sus puntajes
+      # Obtener ranking de usuarios con sus puntajes
     ranking_data = conn.execute('''
         SELECT 
             u.nombre,
@@ -233,9 +242,19 @@ def ranking():
         LIMIT 20
     ''').fetchall()
     
+    # Convertir fechas string a datetime objects
+    ranking_list = []
+    for row in ranking_data:
+        row_dict = dict(row)
+        try:
+            row_dict['fecha'] = datetime.fromisoformat(row['fecha'].replace('Z', '+00:00'))
+        except:
+            row_dict['fecha'] = datetime.now()
+        ranking_list.append(row_dict)
+    
     conn.close()
     
-    return render_template('ranking.html', ranking=ranking_data)
+    return render_template('ranking.html', ranking=ranking_list)
 
 if __name__ == '__main__':
     # Crear la base de datos si no existe
