@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Pregunta {{ pregunta_actual }} - CrisQuiz{% endblock %}
+
+{% block content %}
+<div class="quiz-card">
+    <div class="quiz-header">
+        <h3><i class="fas fa-user me-2"></i>{{ usuario.nombre }}</h3>
+        <p class="mb-0">Pregunta {{ pregunta_actual }} de {{ total_preguntas }}</p>
+    </div>
+    
+    <div class="card-body p-0">
+        <!-- Barra de progreso -->
+        <div class="p-4 border-bottom">
+            <div class="progress-custom">
+                <div class="progress-bar-custom" style="width: {{ (pregunta_actual / total_preguntas * 100) }}%"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+                <small class="text-muted">Progreso: {{ pregunta_actual }}/{{ total_preguntas }}</small>
+                <small class="text-muted">{{ "%.1f"|format(pregunta_actual / total_preguntas * 100) }}%</small>
+            </div>
+        </div>
+        
+        <div class="p-5">
+            {% if ya_respondida %}
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Ya has respondido esta pregunta. Puedes continuar a la siguiente.
+                </div>
+            {% endif %}
+            
+            <div class="question-container">
+                <h4 class="mb-4 fw-bold">{{ pregunta.texto }}</h4>
+                
+                {% if not ya_respondida %}
+                <form method="POST" action="{{ url_for('responder') }}">
+                    <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+                    <input type="hidden" name="pregunta_id" value="{{ pregunta.id }}">
+                    
+                    <div class="options-container">
+                        <button type="submit" name="respuesta" value="a" class="btn option-btn">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary me-3">A</span>
+                                <span>{{ pregunta.opcion_a }}</span>
+                            </div>
+                        </button>
+                        
+                        <button type="submit" name="respuesta" value="b" class="btn option-btn">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary me-3">B</span>
+                                <span>{{ pregunta.opcion_b }}</span>
+                            </div>
+                        </button>
+                        
+                        <button type="submit" name="respuesta" value="c" class="btn option-btn">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary me-3">C</span>
+                                <span>{{ pregunta.opcion_c }}</span>
+                            </div>
+                        </button>
+                        
+                        <button type="submit" name="respuesta" value="d" class="btn option-btn">
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-primary me-3">D</span>
+                                <span>{{ pregunta.opcion_d }}</span>
+                            </div>
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id + 1) }}" 
+                       class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-right me-2"></i>Siguiente Pregunta
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card-footer bg-light">
+            <div class="row align-items-center">
+                <div class="col">
+                    {% if pregunta_actual > 1 %}
+                    <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id - 1) }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Anterior
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="col text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        Selecciona la respuesta que consideres correcta
+                    </small>
+                </div>
+                <div class="col text-end">
+                    {% if pregunta_actual < total_preguntas %}
+                    <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id + 1) }}" 
+                       class="btn btn-outline-primary">
+                        Saltar <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('resultado', usuario_id=usuario.id) }}" 
+                       class="btn btn-success">
+                        Ver Resultados <i class="fas fa-flag-checkered ms-2"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Añadir efectos hover a las opciones
+    const options = document.querySelectorAll('.option-btn');
+    options.forEach(option => {
+        option.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        option.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Confirmar antes de saltar pregunta
+    const skipBtn = document.querySelector('a[href*="pregunta_id=' + ({{ pregunta.id }} + 1) + '"]');
+    if (skipBtn && !{{ ya_respondida|lower }}) {
+        skipBtn.addEventListener('click', function(e) {
+            if (!confirm('¿Estás seguro de que quieres saltar esta pregunta sin responder?')) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

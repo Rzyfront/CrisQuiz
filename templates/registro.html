@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - CrisQuiz{% endblock %}
+
+{% block content %}
+<div class="quiz-card">
+    <div class="quiz-header">
+        <h2><i class="fas fa-user-plus me-3"></i>Registro de Usuario</h2>
+    </div>
+    <div class="card-body p-5">
+        <form method="POST" action="{{ url_for('registro') }}">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="mb-4">
+                        <label for="nombre" class="form-label h5">
+                            <i class="fas fa-user me-2"></i>Ingresa tu nombre:
+                        </label>
+                        <input type="text" 
+                               class="form-control form-control-lg" 
+                               id="nombre" 
+                               name="nombre" 
+                               placeholder="Tu nombre completo"
+                               required 
+                               maxlength="100"
+                               autofocus>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Este nombre aparecerá en el ranking de resultados
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket me-2"></i>Iniciar Test
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <div class="mt-5 pt-4 border-top">
+            <div class="row text-center">
+                <div class="col-md-12">
+                    <h5 class="mb-3">¿Qué te espera?</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <p class="mb-0">Respuestas inmediatas</p>
+                                <small class="text-muted">Sabrás si acertaste al instante</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                                <p class="mb-0">Estadísticas completas</p>
+                                <small class="text-muted">Ve tu progreso y resultados finales</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

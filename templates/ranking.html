@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Ranking - CrisQuiz{% endblock %}
+
+{% block content %}
+<div class="quiz-card">
+    <div class="quiz-header text-center">
+        <h2><i class="fas fa-chart-line me-3"></i>Ranking de Resultados</h2>
+        <p class="text-muted">Los mejores puntajes del test</p>
+    </div>
+    <div class="card-body p-4">
+        {% if ranking %}
+            <!-- Top 3 podio -->
+            {% if ranking|length >= 3 %}
+            <div class="podium-container mb-5">
+                <div class="row justify-content-center">
+                    <!-- Segundo lugar -->
+                    <div class="col-md-3 text-center">
+                        <div class="podium-place second-place">
+                            <div class="podium-number">2</div>
+                            <div class="podium-info">
+                                <h5>{{ ranking[1].nombre }}</h5>
+                                <p class="score">{{ ranking[1].porcentaje }}%</p>
+                                <small>{{ ranking[1].correctas }}/100 correctas</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Primer lugar -->
+                    <div class="col-md-3 text-center">
+                        <div class="podium-place first-place">
+                            <div class="podium-crown">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="podium-number">1</div>
+                            <div class="podium-info">
+                                <h4>{{ ranking[0].nombre }}</h4>
+                                <p class="score">{{ ranking[0].porcentaje }}%</p>
+                                <small>{{ ranking[0].correctas }}/100 correctas</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tercer lugar -->
+                    <div class="col-md-3 text-center">
+                        <div class="podium-place third-place">
+                            <div class="podium-number">3</div>
+                            <div class="podium-info">
+                                <h5>{{ ranking[2].nombre }}</h5>
+                                <p class="score">{{ ranking[2].porcentaje }}%</p>
+                                <small>{{ ranking[2].correctas }}/100 correctas</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Tabla completa de ranking -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Correctas</th>
+                            <th scope="col">Puntaje</th>
+                            <th scope="col">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resultado in ranking %}
+                        <tr {% if loop.index <= 3 %}class="table-warning"{% endif %}>
+                            <td>
+                                <span class="position-badge position-{{ loop.index }}">
+                                    {% if loop.index == 1 %}
+                                        <i class="fas fa-trophy text-warning"></i>
+                                    {% elif loop.index == 2 %}
+                                        <i class="fas fa-medal text-secondary"></i>
+                                    {% elif loop.index == 3 %}
+                                        <i class="fas fa-award text-warning"></i>
+                                    {% else %}
+                                        {{ loop.index }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ resultado.nombre }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ resultado.correctas }}/100</span>
+                            </td>
+                            <td>
+                                <div class="progress-container">
+                                    <div class="progress" style="height: 25px;">
+                                        <div class="progress-bar 
+                                            {% if resultado.porcentaje >= 80 %}bg-success
+                                            {% elif resultado.porcentaje >= 60 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            role="progressbar" 
+                                            style="width: {{ resultado.porcentaje }}%">
+                                            <strong>{{ resultado.porcentaje }}%</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <small class="text-muted">
+                                    {{ resultado.fecha.strftime('%d/%m/%Y %H:%M') }}
+                                </small>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Estadísticas generales -->
+            <div class="mt-5 pt-4 border-top">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <i class="fas fa-users text-primary"></i>
+                            <h4>{{ ranking|length }}</h4>
+                            <p>Participantes</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <i class="fas fa-star text-warning"></i>
+                            <h4>{{ ranking[0].porcentaje if ranking else 0 }}%</h4>
+                            <p>Mejor Puntaje</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <i class="fas fa-chart-bar text-info"></i>
+                            <h4>{{ "%.1f"|format(promedio) if promedio else 0 }}%</h4>
+                            <p>Promedio</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <h4>{{ aprobados }}</h4>
+                            <p>Aprobados (≥60%)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        {% else %}
+            <!-- Sin resultados -->
+            <div class="text-center py-5">
+                <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
+                <h3 class="text-muted">No hay resultados aún</h3>
+                <p class="text-muted">Sé el primero en tomar el test</p>
+                <a href="{{ url_for('registro') }}" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-play me-2"></i>Iniciar Test
+                </a>
+            </div>
+        {% endif %}
+        
+        <!-- Navegación -->
+        <div class="d-grid gap-2 mt-4">
+            <a href="{{ url_for('registro') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus me-2"></i>Tomar el Test
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-home me-2"></i>Volver al Inicio
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.podium-container {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.podium-place {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.first-place {
+    transform: translateY(-20px);
+    border: 3px solid #ffd700;
+}
+
+.second-place {
+    border: 3px solid #c0c0c0;
+}
+
+.third-place {
+    border: 3px solid #cd7f32;
+}
+
+.podium-crown {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffd700;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.podium-number {
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin: 0 auto 1rem auto;
+}
+
+.first-place .podium-number {
+    background: #ffd700;
+    color: #333;
+}
+
+.second-place .podium-number {
+    background: #c0c0c0;
+    color: #333;
+}
+
+.third-place .podium-number {
+    background: #cd7f32;
+}
+
+.podium-info h4, .podium-info h5 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.podium-info .score {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 0.25rem;
+}
+
+.position-badge {
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.progress-container .progress {
+    background-color: #e9ecef;
+}
+
+.stat-item {
+    padding: 1rem;
+}
+
+.stat-item i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.stat-item h4 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+    color: #333;
+}
+
+.stat-item p {
+    color: #6c757d;
+    margin: 0;
+}
+
+.table th {
+    border: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+}
+
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+</style>
+{% endblock %}
