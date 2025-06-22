@@ -9,44 +9,44 @@
         <p class="text-muted">Los mejores puntajes del test</p>
     </div>
     <div class="card-body p-4">
-        {% if ranking %}
-            <!-- Top 3 podio -->
+        {% if ranking %}            <!-- Top 3 podio -->
             {% if ranking|length >= 3 %}
             <div class="podium-container mb-5">
+                <h3 class="text-center mb-4"><i class="fas fa-trophy me-2"></i>Top 3</h3>
                 <div class="row justify-content-center">
                     <!-- Segundo lugar -->
-                    <div class="col-md-3 text-center">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
                         <div class="podium-place second-place">
                             <div class="podium-number">2</div>
                             <div class="podium-info">
-                                <h5>{{ ranking[1].nombre }}</h5>
+                                <h6 class="podium-name">{{ ranking[1].nombre }}</h6>
                                 <p class="score">{{ ranking[1].porcentaje }}%</p>
-                                <small>{{ ranking[1].correctas }}/100 correctas</small>
+                                <small>{{ ranking[1].correctas }}/100</small>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Primer lugar -->
-                    <div class="col-md-3 text-center">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-3 order-first order-md-0">
                         <div class="podium-place first-place">
                             <div class="podium-crown">
                                 <i class="fas fa-crown"></i>
                             </div>
                             <div class="podium-number">1</div>
                             <div class="podium-info">
-                                <h4>{{ ranking[0].nombre }}</h4>
+                                <h6 class="podium-name">{{ ranking[0].nombre }}</h6>
                                 <p class="score">{{ ranking[0].porcentaje }}%</p>
-                                <small>{{ ranking[0].correctas }}/100 correctas</small>
+                                <small>{{ ranking[0].correctas }}/100</small>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Tercer lugar -->
-                    <div class="col-md-3 text-center">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
                         <div class="podium-place third-place">
                             <div class="podium-number">3</div>
                             <div class="podium-info">
-                                <h5>{{ ranking[2].nombre }}</h5>
+                                <h6 class="podium-name">{{ ranking[2].nombre }}</h6>
                                 <p class="score">{{ ranking[2].porcentaje }}%</p>
                                 <small>{{ ranking[2].correctas }}/100 correctas</small>
                             </div>
@@ -55,23 +55,22 @@
                 </div>
             </div>
             {% endif %}
-            
-            <!-- Tabla completa de ranking -->
+              <!-- Tabla completa de ranking -->
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th scope="col">#</th>
+                            <th scope="col" class="text-center">#</th>
                             <th scope="col">Nombre</th>
-                            <th scope="col">Correctas</th>
+                            <th scope="col" class="d-none d-md-table-cell">Correctas</th>
                             <th scope="col">Puntaje</th>
-                            <th scope="col">Fecha</th>
+                            <th scope="col" class="d-none d-lg-table-cell">Fecha</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for resultado in ranking %}
                         <tr {% if loop.index <= 3 %}class="table-warning"{% endif %}>
-                            <td>
+                            <td class="text-center">
                                 <span class="position-badge position-{{ loop.index }}">
                                     {% if loop.index == 1 %}
                                         <i class="fas fa-trophy text-warning"></i>
@@ -85,26 +84,34 @@
                                 </span>
                             </td>
                             <td>
-                                <strong>{{ resultado.nombre }}</strong>
+                                <div class="player-info">
+                                    <strong>{{ resultado.nombre }}</strong>
+                                    <div class="d-md-none">
+                                        <small class="text-muted">{{ resultado.correctas }}/100</small>
+                                    </div>
+                                    <div class="d-lg-none mt-1">
+                                        <small class="text-muted">{{ resultado.fecha.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                </div>
                             </td>
-                            <td>
+                            <td class="d-none d-md-table-cell">
                                 <span class="badge bg-success">{{ resultado.correctas }}/100</span>
                             </td>
                             <td>
                                 <div class="progress-container">
-                                    <div class="progress" style="height: 25px;">
+                                    <div class="progress progress-mobile" style="height: 20px;">
                                         <div class="progress-bar 
                                             {% if resultado.porcentaje >= 80 %}bg-success
                                             {% elif resultado.porcentaje >= 60 %}bg-warning
                                             {% else %}bg-danger{% endif %}" 
                                             role="progressbar" 
                                             style="width: {{ resultado.porcentaje }}%">
-                                            <strong>{{ resultado.porcentaje }}%</strong>
+                                            <small><strong>{{ resultado.porcentaje }}%</strong></small>
                                         </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
+                            <td class="d-none d-lg-table-cell">
                                 <small class="text-muted">
                                     {{ resultado.fecha.strftime('%d/%m/%Y %H:%M') }}
                                 </small>
@@ -114,36 +121,36 @@
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Estadísticas generales -->
+              <!-- Estadísticas generales -->
             <div class="mt-5 pt-4 border-top">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <div class="stat-item">
+                <h4 class="text-center mb-4"><i class="fas fa-chart-bar me-2"></i>Estadísticas</h4>
+                <div class="row">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="stat-item text-center">
                             <i class="fas fa-users text-primary"></i>
-                            <h4>{{ ranking|length }}</h4>
-                            <p>Participantes</p>
+                            <h5 class="stat-number">{{ ranking|length }}</h5>
+                            <p class="stat-label">Participantes</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-item">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="stat-item text-center">
                             <i class="fas fa-star text-warning"></i>
-                            <h4>{{ ranking[0].porcentaje if ranking else 0 }}%</h4>
-                            <p>Mejor Puntaje</p>
+                            <h5 class="stat-number">{{ ranking[0].porcentaje if ranking else 0 }}%</h5>
+                            <p class="stat-label">Mejor Puntaje</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-item">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="stat-item text-center">
                             <i class="fas fa-chart-bar text-info"></i>
-                            <h4>{{ "%.1f"|format(promedio) if promedio else 0 }}%</h4>
-                            <p>Promedio</p>
+                            <h5 class="stat-number">{{ "%.1f"|format(promedio) if promedio else 0 }}%</h5>
+                            <p class="stat-label">Promedio</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-item">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="stat-item text-center">
                             <i class="fas fa-check-circle text-success"></i>
-                            <h4>{{ aprobados }}</h4>
-                            <p>Aprobados (≥60%)</p>
+                            <h5 class="stat-number">{{ aprobados }}</h5>
+                            <p class="stat-label">Aprobados (≥60%)</p>
                         </div>
                     </div>
                 </div>
@@ -177,7 +184,7 @@
 .podium-container {
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     border-radius: 15px;
-    padding: 2rem;
+    padding: 1.5rem;
     margin: 2rem 0;
 }
 
@@ -188,10 +195,14 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     position: relative;
     margin-bottom: 1rem;
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .first-place {
-    transform: translateY(-20px);
     border: 3px solid #ffd700;
 }
 
@@ -246,9 +257,11 @@
     background: #cd7f32;
 }
 
-.podium-info h4, .podium-info h5 {
+.podium-info .podium-name {
     margin-bottom: 0.5rem;
     color: #333;
+    font-weight: bold;
+    word-break: break-word;
 }
 
 .podium-info .score {
@@ -269,43 +282,162 @@
     background-color: #e9ecef;
 }
 
+.progress-mobile {
+    min-width: 80px;
+}
+
+.player-info {
+    min-width: 120px;
+}
+
 .stat-item {
-    padding: 1rem;
+    padding: 1rem 0.5rem;
 }
 
 .stat-item i {
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
     display: block;
 }
 
-.stat-item h4 {
-    font-size: 2rem;
+.stat-number {
+    font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 0.25rem;
     color: #333;
 }
 
-.stat-item p {
+.stat-label {
     color: #6c757d;
     margin: 0;
+    font-size: 0.9rem;
 }
 
 .table th {
     border: none;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     letter-spacing: 0.5px;
+    padding: 0.75rem 0.5rem;
 }
 
 .table td {
     vertical-align: middle;
     border-top: 1px solid #dee2e6;
+    padding: 0.75rem 0.5rem;
 }
 
 .table-warning {
     background-color: rgba(255, 193, 7, 0.1) !important;
 }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .podium-container {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .podium-place {
+        padding: 1rem;
+    }
+    
+    .first-place {
+        transform: none;
+        order: -1;
+    }
+    
+    .podium-info .score {
+        font-size: 1.2rem;
+    }
+    
+    .podium-number {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .podium-crown {
+        width: 25px;
+        height: 25px;
+        top: -12px;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .progress-mobile {
+        height: 18px !important;
+    }
+    
+    .progress-mobile .progress-bar small {
+        font-size: 0.75rem;
+    }
+    
+    .stat-item {
+        padding: 0.75rem 0.25rem;
+    }
+    
+    .stat-item i {
+        font-size: 1.25rem;
+    }
+    
+    .stat-number {
+        font-size: 1.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .podium-container h3 {
+        font-size: 1.25rem;
+    }
+    
+    .podium-info .podium-name {
+        font-size: 0.9rem;
+    }
+    
+    .podium-info .score {
+        font-size: 1.1rem;
+    }
+    
+    .podium-info small {
+        font-size: 0.75rem;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+    }
+    
+    .table th {
+        font-size: 0.7rem;
+    }
+    
+    .position-badge {
+        width: 25px;
+    }
+    
+    .progress-mobile {
+        min-width: 60px;
+    }
+    
+    .player-info {
+        min-width: 100px;
+    }
+    
+    .stat-item {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .stat-number {
+        font-size: 1.1rem;
+    }
+}
+</style>
 </style>
 {% endblock %}

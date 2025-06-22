@@ -77,32 +77,32 @@
                 {% endif %}
             </div>
         </div>
-        
-        <div class="card-footer bg-light">
+          <div class="card-footer bg-light">
             <div class="row align-items-center">
-                <div class="col">
+                <div class="col-12 col-md-4 mb-2 mb-md-0">
                     {% if pregunta_actual > 1 %}
                     <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id - 1) }}" 
-                       class="btn btn-outline-secondary">
+                       class="btn btn-outline-secondary btn-sm w-100 w-md-auto">
                         <i class="fas fa-arrow-left me-2"></i>Anterior
                     </a>
                     {% endif %}
                 </div>
-                <div class="col text-center">
-                    <small class="text-muted">
+                <div class="col-12 col-md-4 text-center mb-2 mb-md-0">
+                    <small class="text-muted d-block">
                         <i class="fas fa-lightbulb me-1"></i>
-                        Selecciona la respuesta que consideres correcta
+                        <span class="d-none d-sm-inline">Selecciona la respuesta que consideres correcta</span>
+                        <span class="d-sm-none">Selecciona tu respuesta</span>
                     </small>
                 </div>
-                <div class="col text-end">
+                <div class="col-12 col-md-4 text-center text-md-end">
                     {% if pregunta_actual < total_preguntas %}
                     <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id + 1) }}" 
-                       class="btn btn-outline-primary">
+                       class="btn btn-outline-primary btn-sm w-100 w-md-auto">
                         Saltar <i class="fas fa-arrow-right ms-2"></i>
                     </a>
                     {% else %}
                     <a href="{{ url_for('resultado', usuario_id=usuario.id) }}" 
-                       class="btn btn-success">
+                       class="btn btn-success btn-sm w-100 w-md-auto">
                         Ver Resultados <i class="fas fa-flag-checkered ms-2"></i>
                     </a>
                     {% endif %}
@@ -111,6 +111,102 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Responsive improvements for test page */
+@media (max-width: 768px) {
+    .quiz-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    .quiz-header p {
+        font-size: 0.9rem;
+    }
+    
+    .option-btn {
+        padding: 12px;
+        margin: 8px 0;
+        font-size: 0.9rem;
+    }
+    
+    .option-btn .badge {
+        font-size: 0.8rem;
+        margin-right: 10px !important;
+    }
+    
+    .question-container h4 {
+        font-size: 1.1rem;
+        line-height: 1.4;
+    }
+    
+    .progress-custom {
+        height: 20px;
+    }
+    
+    .card-footer {
+        padding: 1rem 0.5rem;
+    }
+    
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .quiz-header {
+        padding: 12px;
+    }
+    
+    .quiz-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .option-btn {
+        padding: 10px;
+        margin: 6px 0;
+        font-size: 0.85rem;
+    }
+    
+    .option-btn .badge {
+        font-size: 0.75rem;
+        margin-right: 8px !important;
+        min-width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .question-container h4 {
+        font-size: 1rem;
+    }
+    
+    .question-container {
+        padding: 1rem !important;
+    }
+    
+    .progress-custom {
+        height: 18px;
+    }
+    
+    .d-flex.justify-content-between small {
+        font-size: 0.75rem;
+    }
+}
+
+/* Improve option buttons layout */
+.option-btn .d-flex {
+    align-items: flex-start;
+    text-align: left;
+}
+
+.option-btn span:last-child {
+    flex: 1;
+    word-wrap: break-word;
+    line-height: 1.3;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -8,27 +8,26 @@
         <h2><i class="fas fa-trophy me-3"></i>¡Test Completado!</h2>
         <p class="mb-0">{{ usuario.nombre }}</p>
     </div>
-    <div class="card-body p-5">
-        <!-- Estadísticas principales -->
-        <div class="row mb-5">
-            <div class="col-md-6">
+    <div class="card-body p-5">        <!-- Estadísticas principales -->
+        <div class="row mb-4">
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
                 <div class="stat-card bg-success text-white">
                     <div class="stat-icon">
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>{{ correctas }}</h3>
+                        <h4>{{ correctas }}</h4>
                         <p>Respuestas Correctas</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="stat-card bg-danger text-white">
                     <div class="stat-icon">
                         <i class="fas fa-times-circle"></i>
                     </div>
                     <div class="stat-content">
-                        <h3>{{ incorrectas }}</h3>
+                        <h4>{{ incorrectas }}</h4>
                         <p>Respuestas Incorrectas</p>
                     </div>
                 </div>
@@ -89,25 +88,24 @@
                 <i class="fas fa-home me-2"></i>Volver al Inicio
             </a>
         </div>
-        
-        <!-- Información adicional -->
-        <div class="mt-5 pt-4 border-top">
+          <!-- Información adicional -->
+        <div class="mt-4 pt-4 border-top">
             <div class="row text-center">
-                <div class="col-md-4">
+                <div class="col-6 col-md-4 mb-3">
                     <div class="info-item">
                         <i class="fas fa-clock text-primary mb-2"></i>
                         <p class="mb-1"><strong>Fecha</strong></p>
                         <small class="text-muted">{{ usuario.fecha.strftime('%d/%m/%Y %H:%M') }}</small>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-6 col-md-4 mb-3">
                     <div class="info-item">
                         <i class="fas fa-list-ol text-info mb-2"></i>
                         <p class="mb-1"><strong>Total Preguntas</strong></p>
                         <small class="text-muted">{{ total }} preguntas</small>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4 mb-3">
                     <div class="info-item">
                         <i class="fas fa-percentage text-warning mb-2"></i>
                         <p class="mb-1"><strong>Efectividad</strong></p>
@@ -121,21 +119,23 @@
 
 <style>
 .stat-card {
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 15px;
     display: flex;
     align-items: center;
     margin-bottom: 1rem;
+    min-height: 100px;
 }
 
 .stat-icon {
-    font-size: 3rem;
-    margin-right: 1.5rem;
+    font-size: 2.5rem;
+    margin-right: 1rem;
     opacity: 0.8;
+    flex-shrink: 0;
 }
 
-.stat-content h3 {
-    font-size: 2.5rem;
+.stat-content h4 {
+    font-size: 2rem;
     font-weight: bold;
     margin: 0;
     line-height: 1;
@@ -143,12 +143,12 @@
 
 .stat-content p {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .score-circle {
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     background: linear-gradient(135deg, #007bff, #0056b3);
     display: flex;
@@ -156,27 +156,144 @@
     justify-content: center;
     align-items: center;
     color: white;
-    margin: 2rem auto;
+    margin: 1.5rem auto;
 }
 
 .score-percentage {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: bold;
     line-height: 1;
 }
 
 .score-circle small {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     opacity: 0.9;
 }
 
 .info-item {
-    padding: 1rem;
+    padding: 0.75rem;
 }
 
 .info-item i {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     display: block;
+}
+
+.info-item p {
+    font-size: 0.9rem;
+}
+
+.info-item small {
+    font-size: 0.8rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .quiz-card .card-body {
+        padding: 2rem 1.5rem !important;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+        min-height: auto;
+    }
+    
+    .stat-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+    
+    .stat-content h4 {
+        font-size: 1.5rem;
+    }
+    
+    .stat-content p {
+        font-size: 0.9rem;
+    }
+    
+    .score-circle {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .score-percentage {
+        font-size: 1.5rem;
+    }
+    
+    .score-circle small {
+        font-size: 0.75rem;
+    }
+    
+    .badge.fs-5 {
+        font-size: 1rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .quiz-card .card-body {
+        padding: 1.5rem 1rem !important;
+    }
+    
+    .quiz-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.75rem;
+    }
+    
+    .stat-content h4 {
+        font-size: 1.25rem;
+    }
+    
+    .stat-content p {
+        font-size: 0.85rem;
+    }
+    
+    .score-circle {
+        width: 90px;
+        height: 90px;
+        margin: 1rem auto;
+    }
+    
+    .score-percentage {
+        font-size: 1.25rem;
+    }
+    
+    .info-item {
+        padding: 0.5rem;
+    }
+    
+    .info-item i {
+        font-size: 1rem;
+    }
+    
+    .info-item p {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .info-item small {
+        font-size: 0.7rem;
+    }
+    
+    .badge.fs-5 {
+        font-size: 0.9rem !important;
+        padding: 0.4rem 0.8rem !important;
+    }
+    
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+    }
 }
 </style>
 {% endblock %}

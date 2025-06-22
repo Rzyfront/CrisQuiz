@@ -62,14 +62,47 @@
         }
         .ranking-card:hover {
             transform: translateY(-5px);
-        }
-        .medal {
+        }        .medal {
             font-size: 2rem;
             margin-right: 15px;
         }
         .gold { color: #FFD700; }
         .silver { color: #C0C0C0; }
         .bronze { color: #CD7F32; }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 10px 5px;
+            }
+            .quiz-card {
+                margin: 10px 5px;
+                border-radius: 10px;
+            }
+            .quiz-header {
+                padding: 15px;
+                border-radius: 10px 10px 0 0;
+            }
+            .quiz-header h1, .quiz-header h2 {
+                font-size: 1.5rem;
+            }
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .quiz-header h1, .quiz-header h2 {
+                font-size: 1.3rem;
+            }
+            .quiz-header p {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
