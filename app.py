@@ -69,18 +69,24 @@ def registro():
         if not nombre:
             flash('El nombre es obligatorio', 'error')
             return redirect(url_for('registro'))
-        
-        conn = get_db_connection()
+          conn = get_db_connection()
         cursor = conn.execute(
             'INSERT INTO usuarios (nombre, fecha) VALUES (?, ?)',
             (nombre, datetime.now())
         )
         usuario_id = cursor.lastrowid
+        
+        # Obtener el ID de la primera pregunta disponible
+        primera_pregunta = conn.execute('SELECT id FROM preguntas ORDER BY id LIMIT 1').fetchone()
         conn.commit()
         conn.close()
         
-        flash(f'Usuario {nombre} registrado exitosamente', 'success')
-        return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=1))
+        if primera_pregunta:
+            flash(f'Usuario {nombre} registrado exitosamente', 'success')
+            return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=primera_pregunta['id']))
+        else:
+            flash('No hay preguntas disponibles en el sistema', 'error')
+            return redirect(url_for('index'))
     
     return render_template('registro.html')
 
@@ -148,18 +154,26 @@ def responder():
         (usuario_id, pregunta_id, respuesta_usuario, es_correcta)
     )
     conn.commit()
-    
-    # Mostrar si fue correcta o no
+      # Mostrar si fue correcta o no
     if es_correcta:
         flash('¡Respuesta correcta!', 'success')
     else:
         opciones = {'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D'}
         flash(f'Respuesta incorrecta. La respuesta correcta era la opción {opciones[pregunta["correcta"]]}', 'error')
     
+    # Buscar la siguiente pregunta disponible
+    siguiente_pregunta = conn.execute(
+        'SELECT id FROM preguntas WHERE id > ? ORDER BY id LIMIT 1', 
+        (pregunta_id,)
+    ).fetchone()
+    
     conn.close()
     
-    # Ir a la siguiente pregunta
-    return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=pregunta_id + 1))
+    # Ir a la siguiente pregunta o al resultado si no hay más
+    if siguiente_pregunta:
+        return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=siguiente_pregunta['id']))
+    else:
+        return redirect(url_for('resultado', usuario_id=usuario_id))
 
 @app.route('/resultado/<int:usuario_id>')
 def resultado(usuario_id):
