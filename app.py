@@ -2,11 +2,41 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 import sqlite3
 from datetime import datetime
 import os
+import random
+import json
 
 app = Flask(__name__)
 app.secret_key = 'tu_clave_secreta_aqui'
 
 DATABASE = 'quiz.db'
+
+# Agregar funciones auxiliares al contexto de Jinja2
+@app.context_processor
+def utility_processor():
+    def obtener_url_siguiente_pregunta(usuario_id, pregunta_id):
+        siguiente_id = obtener_siguiente_pregunta_id(usuario_id, pregunta_id)
+        if siguiente_id:
+            return url_for('test', usuario_id=usuario_id, pregunta_id=siguiente_id)
+        return url_for('resultado', usuario_id=usuario_id)
+    
+    def obtener_url_anterior_pregunta(usuario_id, pregunta_id):
+        anterior_id = obtener_anterior_pregunta_id(usuario_id, pregunta_id)
+        if anterior_id:
+            return url_for('test', usuario_id=usuario_id, pregunta_id=anterior_id)
+        return None
+    
+    def tiene_pregunta_anterior(usuario_id, pregunta_id):
+        return obtener_anterior_pregunta_id(usuario_id, pregunta_id) is not None
+    
+    def tiene_pregunta_siguiente(usuario_id, pregunta_id):
+        return obtener_siguiente_pregunta_id(usuario_id, pregunta_id) is not None
+    
+    return dict(
+        obtener_url_siguiente_pregunta=obtener_url_siguiente_pregunta,
+        obtener_url_anterior_pregunta=obtener_url_anterior_pregunta,
+        tiene_pregunta_anterior=tiene_pregunta_anterior,
+        tiene_pregunta_siguiente=tiene_pregunta_siguiente
+    )
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -22,9 +52,29 @@ def init_db():
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nombre TEXT NOT NULL,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            orden_preguntas TEXT
         )
     ''')
+    
+    # Migración: agregar columna orden_preguntas si no existe
+    try:
+        conn.execute('ALTER TABLE usuarios ADD COLUMN orden_preguntas TEXT')
+    except sqlite3.OperationalError:
+        # La columna ya existe
+        pass
+    
+    # Actualizar usuarios sin orden_preguntas
+    usuarios_sin_orden = conn.execute(
+        'SELECT id FROM usuarios WHERE orden_preguntas IS NULL'
+    ).fetchall()
+    
+    for usuario in usuarios_sin_orden:
+        orden_aleatorio = generar_orden_aleatorio()
+        conn.execute(
+            'UPDATE usuarios SET orden_preguntas = ? WHERE id = ?',
+            (orden_aleatorio, usuario['id'])
+        )
     
     # Crear tabla preguntas
     conn.execute('''
@@ -55,6 +105,56 @@ def init_db():
     conn.commit()
     conn.close()
 
+def generar_orden_aleatorio():
+    """Genera un orden aleatorio de todas las preguntas disponibles"""
+    conn = get_db_connection()
+    preguntas = conn.execute('SELECT id FROM preguntas ORDER BY id').fetchall()
+    conn.close()
+    
+    ids_preguntas = [p['id'] for p in preguntas]
+    random.shuffle(ids_preguntas)
+    return json.dumps(ids_preguntas)
+
+def obtener_orden_preguntas(usuario_id):
+    """Obtiene el orden de preguntas para un usuario específico"""
+    conn = get_db_connection()
+    usuario = conn.execute('SELECT orden_preguntas FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()
+    conn.close()
+    
+    if usuario and usuario['orden_preguntas']:
+        return json.loads(usuario['orden_preguntas'])
+    return []
+
+def obtener_numero_pregunta_en_orden(usuario_id, pregunta_id):
+    """Obtiene el número de pregunta en el orden aleatorio del usuario"""
+    orden = obtener_orden_preguntas(usuario_id)
+    try:
+        return orden.index(pregunta_id) + 1
+    except ValueError:
+        return 0
+
+def obtener_siguiente_pregunta_id(usuario_id, pregunta_actual_id):
+    """Obtiene el ID de la siguiente pregunta en el orden aleatorio"""
+    orden = obtener_orden_preguntas(usuario_id)
+    try:
+        indice_actual = orden.index(pregunta_actual_id)
+        if indice_actual + 1 < len(orden):
+            return orden[indice_actual + 1]
+    except ValueError:
+        pass
+    return None
+
+def obtener_anterior_pregunta_id(usuario_id, pregunta_actual_id):
+    """Obtiene el ID de la pregunta anterior en el orden aleatorio"""
+    orden = obtener_orden_preguntas(usuario_id)
+    try:
+        indice_actual = orden.index(pregunta_actual_id)
+        if indice_actual > 0:
+            return orden[indice_actual - 1]
+    except ValueError:
+        pass
+    return None
+
 @app.route('/')
 def index():
     """Página principal"""
@@ -70,21 +170,26 @@ def registro():
             flash('El nombre es obligatorio', 'error')
             return redirect(url_for('registro'))
         
+        # Generar orden aleatorio de preguntas
+        orden_aleatorio = generar_orden_aleatorio()
+        
         conn = get_db_connection()
         cursor = conn.execute(
-            'INSERT INTO usuarios (nombre, fecha) VALUES (?, ?)',
-            (nombre, datetime.now())
+            'INSERT INTO usuarios (nombre, fecha, orden_preguntas) VALUES (?, ?, ?)',
+            (nombre, datetime.now(), orden_aleatorio)
         )
         usuario_id = cursor.lastrowid
         
-        # Obtener el ID de la primera pregunta disponible
-        primera_pregunta = conn.execute('SELECT id FROM preguntas ORDER BY id LIMIT 1').fetchone()
+        # Obtener la primera pregunta del orden aleatorio
+        orden_preguntas = json.loads(orden_aleatorio)
+        primera_pregunta_id = orden_preguntas[0] if orden_preguntas else None
+        
         conn.commit()
         conn.close()
         
-        if primera_pregunta:
+        if primera_pregunta_id:
             flash(f'Usuario {nombre} registrado exitosamente', 'success')
-            return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=primera_pregunta['id']))
+            return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=primera_pregunta_id))
         else:
             flash('No hay preguntas disponibles en el sistema', 'error')
             return redirect(url_for('index'))
@@ -114,6 +219,9 @@ def test(usuario_id, pregunta_id):
         (usuario_id, pregunta_id)
     ).fetchone()
     
+    # Obtener el número de pregunta en el orden aleatorio del usuario
+    pregunta_actual = obtener_numero_pregunta_en_orden(usuario_id, pregunta_id)
+    
     # Contar total de preguntas
     total_preguntas = conn.execute('SELECT COUNT(*) as count FROM preguntas').fetchone()['count']
     
@@ -122,7 +230,7 @@ def test(usuario_id, pregunta_id):
     return render_template('test.html', 
                          usuario=usuario, 
                          pregunta=pregunta, 
-                         pregunta_actual=pregunta_id,
+                         pregunta_actual=pregunta_actual,
                          total_preguntas=total_preguntas,
                          ya_respondida=respuesta_existente is not None)
 
@@ -143,7 +251,11 @@ def responder():
     
     if respuesta_existente:
         flash('Ya has respondido esta pregunta', 'warning')
-        return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=pregunta_id + 1))
+        siguiente_pregunta_id = obtener_siguiente_pregunta_id(usuario_id, pregunta_id)
+        if siguiente_pregunta_id:
+            return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=siguiente_pregunta_id))
+        else:
+            return redirect(url_for('resultado', usuario_id=usuario_id))
     
     # Obtener la respuesta correcta
     pregunta = conn.execute('SELECT correcta FROM preguntas WHERE id = ?', (pregunta_id,)).fetchone()
@@ -163,17 +275,14 @@ def responder():
         opciones = {'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D'}
         flash(f'Respuesta incorrecta. La respuesta correcta era la opción {opciones[pregunta["correcta"]]}', 'error')
     
-    # Buscar la siguiente pregunta disponible
-    siguiente_pregunta = conn.execute(
-        'SELECT id FROM preguntas WHERE id > ? ORDER BY id LIMIT 1', 
-        (pregunta_id,)
-    ).fetchone()
+    # Buscar la siguiente pregunta en el orden aleatorio del usuario
+    siguiente_pregunta_id = obtener_siguiente_pregunta_id(usuario_id, pregunta_id)
     
     conn.close()
     
     # Ir a la siguiente pregunta o al resultado si no hay más
-    if siguiente_pregunta:
-        return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=siguiente_pregunta['id']))
+    if siguiente_pregunta_id:
+        return redirect(url_for('test', usuario_id=usuario_id, pregunta_id=siguiente_pregunta_id))
     else:
         return redirect(url_for('resultado', usuario_id=usuario_id))
 

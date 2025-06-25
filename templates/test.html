@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Pregunta {{ pregunta_actual }} - CrisQuiz{% endblock %}
+{% block title %}Pregunta {{ pregunta_actual }} - Simulador Preparatorios{% endblock %}
 
 {% block content %}
 <div class="quiz-card">
@@ -40,28 +40,28 @@
                     <div class="options-container">
                         <button type="submit" name="respuesta" value="a" class="btn option-btn">
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-primary me-3">A</span>
+                                <span class="badge me-3" style="background-color: #3300cc; color: white;">A</span>
                                 <span>{{ pregunta.opcion_a }}</span>
                             </div>
                         </button>
                         
                         <button type="submit" name="respuesta" value="b" class="btn option-btn">
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-primary me-3">B</span>
+                                <span class="badge me-3" style="background-color: #3300cc; color: white;">B</span>
                                 <span>{{ pregunta.opcion_b }}</span>
                             </div>
                         </button>
                         
                         <button type="submit" name="respuesta" value="c" class="btn option-btn">
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-primary me-3">C</span>
+                                <span class="badge me-3" style="background-color: #3300cc; color: white;">C</span>
                                 <span>{{ pregunta.opcion_c }}</span>
                             </div>
                         </button>
                         
                         <button type="submit" name="respuesta" value="d" class="btn option-btn">
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-primary me-3">D</span>
+                                <span class="badge me-3" style="background-color: #3300cc; color: white;">D</span>
                                 <span>{{ pregunta.opcion_d }}</span>
                             </div>
                         </button>
@@ -69,7 +69,7 @@
                 </form>
                 {% else %}
                 <div class="text-center mt-4">
-                    <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id + 1) }}" 
+                    <a href="{{ obtener_url_siguiente_pregunta(usuario.id, pregunta.id) }}" 
                        class="btn btn-primary btn-lg">
                         <i class="fas fa-arrow-right me-2"></i>Siguiente Pregunta
                     </a>
@@ -80,8 +80,8 @@
           <div class="card-footer bg-light">
             <div class="row align-items-center">
                 <div class="col-12 col-md-4 mb-2 mb-md-0">
-                    {% if pregunta_actual > 1 %}
-                    <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id - 1) }}" 
+                    {% if tiene_pregunta_anterior(usuario.id, pregunta.id) %}
+                    <a href="{{ obtener_url_anterior_pregunta(usuario.id, pregunta.id) }}" 
                        class="btn btn-outline-secondary btn-sm w-100 w-md-auto">
                         <i class="fas fa-arrow-left me-2"></i>Anterior
                     </a>
@@ -95,8 +95,8 @@
                     </small>
                 </div>
                 <div class="col-12 col-md-4 text-center text-md-end">
-                    {% if pregunta_actual < total_preguntas %}
-                    <a href="{{ url_for('test', usuario_id=usuario.id, pregunta_id=pregunta.id + 1) }}" 
+                    {% if tiene_pregunta_siguiente(usuario.id, pregunta.id) %}
+                    <a href="{{ obtener_url_siguiente_pregunta(usuario.id, pregunta.id) }}" 
                        class="btn btn-outline-primary btn-sm w-100 w-md-auto">
                         Saltar <i class="fas fa-arrow-right ms-2"></i>
                     </a>

@@ -2,108 +2,12 @@ import sqlite3
 import re
 import os
 
-def analyze_question_and_get_answer(question_text, options):
-    """
-    Analiza una pregunta y sus opciones para determinar la respuesta correcta
-    basándose en conocimiento general sobre temas policiales y de seguridad.
-    """
-    question_lower = question_text.lower()
-    
-    # Análisis de palabras clave y patrones para determinar respuesta correcta
-    
-    # Preguntas sobre comunicación
-    if "comunicación" in question_lower:
-        if "asertiva" in options['a'].lower() or "efectiva" in options['a'].lower():
-            return 'a'
-        if "asertiva" in options['b'].lower() or "efectiva" in options['b'].lower():
-            return 'b'
-        if "clara" in options['c'].lower() or "precisa" in options['c'].lower():
-            return 'c'
-        if "todas las anteriores" in options['d'].lower():
-            return 'd'
-    
-    # Preguntas sobre derechos humanos
-    if "derechos humanos" in question_lower or "dignidad" in question_lower:
-        for key, option in options.items():
-            if "respeto" in option.lower() or "dignidad" in option.lower() or "igualdad" in option.lower():
-                return key
-    
-    # Preguntas sobre procedimientos policiales
-    if "procedimiento" in question_lower or "protocolo" in question_lower:
-        for key, option in options.items():
-            if "legal" in option.lower() or "reglamento" in option.lower() or "norma" in option.lower():
-                return key
-    
-    # Preguntas sobre ética policial
-    if "ética" in question_lower or "moral" in question_lower:
-        for key, option in options.items():
-            if "honestidad" in option.lower() or "integridad" in option.lower() or "transparencia" in option.lower():
-                return key
-    
-    # Preguntas sobre uso de la fuerza
-    if "fuerza" in question_lower:
-        for key, option in options.items():
-            if "proporcional" in option.lower() or "mínima" in option.lower() or "necesaria" in option.lower():
-                return key
-    
-    # Preguntas sobre prevención
-    if "prevención" in question_lower or "prevenir" in question_lower:
-        for key, option in options.items():
-            if "educación" in option.lower() or "sensibilización" in option.lower() or "capacitación" in option.lower():
-                return key
-    
-    # Preguntas sobre investigación
-    if "investigación" in question_lower or "investigar" in question_lower:
-        for key, option in options.items():
-            if "evidencia" in option.lower() or "pruebas" in option.lower() or "metódico" in option.lower():
-                return key
-    
-    # Preguntas sobre atención al ciudadano
-    if "ciudadano" in question_lower or "servicio" in question_lower:
-        for key, option in options.items():
-            if "respeto" in option.lower() or "cortesía" in option.lower() or "profesional" in option.lower():
-                return key
-    
-    # Preguntas sobre liderazgo
-    if "liderazgo" in question_lower or "líder" in question_lower:
-        for key, option in options.items():
-            if "ejemplo" in option.lower() or "motivar" in option.lower() or "dirigir" in option.lower():
-                return key
-    
-    # Preguntas sobre trabajo en equipo
-    if "equipo" in question_lower or "colaboración" in question_lower:
-        for key, option in options.items():
-            if "cooperación" in option.lower() or "coordinación" in option.lower() or "apoyo" in option.lower():
-                return key
-    
-    # Si no se puede determinar por patrones, usar heurísticas generales
-    
-    # Buscar opciones que suenen más completas o profesionales
-    for key, option in options.items():
-        option_lower = option.lower()
-        if any(word in option_lower for word in [
-            "todas las anteriores", "ambas", "tanto", "además",
-            "profesional", "ético", "legal", "constitucional",
-            "respeto", "dignidad", "transparencia", "honestidad"
-        ]):
-            return key
-    
-    # Evitar opciones extremas o negativas
-    for key, option in options.items():
-        option_lower = option.lower()
-        if any(word in option_lower for word in [
-            "nunca", "jamás", "imposible", "prohibido",
-            "violencia", "agresión", "discriminación"
-        ]):
-            continue
-        else:
-            return key
-    
-    # Como último recurso, devolver 'a'
-    return 'a'
+import sqlite3
+import re
+import os
 
 def parse_questions_from_md(filename):
-    """Parse questions from Questions.md file"""
+    """Parse questions from Questions.md file with improved parsing"""
     questions = []
     
     if not os.path.exists(filename):
@@ -113,61 +17,97 @@ def parse_questions_from_md(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         content = file.read()
     
-    # Split by question headers (## followed by number)
-    question_blocks = re.split(r'\n(?=## \d+)', content.strip())
+    # Dividir el contenido en bloques de preguntas
+    # Buscar patrones como "1. " seguido de texto de pregunta
+    question_pattern = r'(\d+)\.\s*([^#]*?)(?=\d+\.\s|$)'
     
-    for block in question_blocks:
-        if not block.strip() or not block.startswith('##'):
+    # Split content into lines for easier processing
+    lines = content.split('\n')
+    
+    current_question = None
+    current_options = {}
+    current_answer = None
+    in_options_block = False
+    
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        # Skip empty lines and headers
+        if not line or line.startswith('#') or 'PROCESO DE ENTRENAMIENTO' in line or 'POLICÍA NACIONAL' in line:
+            i += 1
             continue
         
-        lines = block.strip().split('\n')
-        
-        # Extract question text (remove ## and number)
-        header_match = re.match(r'## (\d+)\s*(.*)', lines[0])
-        if not header_match:
+        # Check if this is a question line (starts with number.)
+        question_match = re.match(r'^(\d+)\.\s*(.*)', line)
+        if question_match:
+            # Save previous question if we have one complete
+            if current_question and len(current_options) == 4 and current_answer:
+                questions.append({
+                    'texto': current_question.strip(),
+                    'opcion_a': current_options.get('a', ''),
+                    'opcion_b': current_options.get('b', ''),
+                    'opcion_c': current_options.get('c', ''),
+                    'opcion_d': current_options.get('d', ''),
+                    'correcta': current_answer.lower()
+                })
+            
+            # Start new question
+            current_question = question_match.group(2)
+            current_options = {}
+            current_answer = None
+            in_options_block = False
+            
+            # Continue reading question text if it spans multiple lines
+            i += 1
+            while i < len(lines) and not lines[i].strip().startswith('```') and not re.match(r'^\d+\.', lines[i].strip()):
+                if lines[i].strip() and not lines[i].strip().startswith('#'):
+                    current_question += ' ' + lines[i].strip()
+                i += 1
             continue
         
-        question_text = header_match.group(2).strip()
-        if not question_text:
+        # Check for start of options block
+        if line == '```' and not in_options_block:
+            in_options_block = True
+            i += 1
             continue
         
-        # Find the code block with options
-        in_code_block = False
-        options = {'a': '', 'b': '', 'c': '', 'd': ''}
+        # Check for end of options block or answer block
+        if line == '```' and in_options_block:
+            in_options_block = False
+            i += 1
+            continue
         
-        for line in lines[1:]:
-            line = line.strip()
-            
-            if line == '```':
-                if in_code_block:
-                    break  # End of code block
-                else:
-                    in_code_block = True  # Start of code block
-                continue
-            
-            if in_code_block:
-                # Parse options (a. text, b. text, etc.)
-                option_match = re.match(r'([abcd])\.\s*(.*)', line)
-                if option_match:
-                    option_letter = option_match.group(1)
-                    option_text = option_match.group(2).strip()
-                    options[option_letter] = option_text
+        # Parse options inside code blocks
+        if in_options_block:
+            option_match = re.match(r'^([abcd])[\.\)]\s*(.*)', line)
+            if option_match:
+                option_letter = option_match.group(1)
+                option_text = option_match.group(2).strip()
+                current_options[option_letter] = option_text
+            elif line.startswith('Respuesta:'):
+                answer_match = re.search(r'Respuesta:\s*([ABCD])', line)
+                if answer_match:
+                    current_answer = answer_match.group(1)
         
-        # Validate that we have all options
-        if all(options[key] for key in ['a', 'b', 'c', 'd']):
-            # Analyze question to determine correct answer
-            correct_answer = analyze_question_and_get_answer(question_text, options)
-            
-            questions.append({
-                'texto': question_text,
-                'opcion_a': options['a'],
-                'opcion_b': options['b'],
-                'opcion_c': options['c'],
-                'opcion_d': options['d'],
-                'correcta': correct_answer
-            })
-        else:
-            print(f"Pregunta incompleta ignorada: {question_text[:50]}...")
+        # Parse answers outside code blocks
+        elif line.startswith('Respuesta:'):
+            answer_match = re.search(r'Respuesta:\s*([ABCD])', line)
+            if answer_match:
+                current_answer = answer_match.group(1)
+        
+        i += 1
+    
+    # Don't forget the last question
+    if current_question and len(current_options) == 4 and current_answer:
+        questions.append({
+            'texto': current_question.strip(),
+            'opcion_a': current_options.get('a', ''),
+            'opcion_b': current_options.get('b', ''),
+            'opcion_c': current_options.get('c', ''),
+            'opcion_d': current_options.get('d', ''),
+            'correcta': current_answer.lower()
+        })
     
     return questions
 
@@ -228,9 +168,10 @@ def populate_database():
         conn.close()
         return
     
-    print(f"Se encontraron {len(questions)} preguntas. Insertando en la base de datos...")
+    print(f"✅ Se encontraron {len(questions)} preguntas válidas. Insertando en la base de datos...")
     
     # Insert questions
+    inserted_count = 0
     for i, question in enumerate(questions, 1):
         try:
             conn.execute('''
@@ -244,8 +185,15 @@ def populate_database():
                 question['opcion_d'],
                 question['correcta']
             ))
+            inserted_count += 1
+            
+            # Show progress every 25 questions
+            if inserted_count % 25 == 0:
+                print(f"Insertadas {inserted_count} preguntas...")
+                
         except Exception as e:
-            print(f"Error insertando pregunta {i}: {e}")
+            print(f"❌ Error insertando pregunta {i}: {e}")
+            print(f"   Pregunta: {question['texto'][:80]}...")
             continue
     
     conn.commit()
@@ -254,19 +202,35 @@ def populate_database():
     final_count = conn.execute('SELECT COUNT(*) FROM preguntas').fetchone()[0]
     print(f"✅ Se insertaron {final_count} preguntas exitosamente.")
     
-    # Show a sample question
+    # Show some sample questions
     if final_count > 0:
-        sample = conn.execute('SELECT * FROM preguntas LIMIT 1').fetchone()
-        print(f"\n📋 Ejemplo de pregunta:")
-        print(f"Texto: {sample['texto']}")
-        print(f"a) {sample['opcion_a']}")
-        print(f"b) {sample['opcion_b']}")
-        print(f"c) {sample['opcion_c']}")
-        print(f"d) {sample['opcion_d']}")
-        print(f"Respuesta determinada: {sample['correcta']}")
+        print(f"\n📋 Ejemplos de preguntas insertadas:")
+        samples = conn.execute('SELECT * FROM preguntas LIMIT 3').fetchall()
+        for i, sample in enumerate(samples, 1):
+            print(f"\n{i}. {sample['texto']}")
+            print(f"   a) {sample['opcion_a']}")
+            print(f"   b) {sample['opcion_b']}")
+            print(f"   c) {sample['opcion_c']}")
+            print(f"   d) {sample['opcion_d']}")
+            print(f"   Respuesta correcta: {sample['correcta'].upper()}")
     
     conn.close()
-    print("\n🎉 Base de datos poblada exitosamente!")
+    print(f"\n🎉 Base de datos poblada exitosamente con {final_count} preguntas!")
+    
+    # Show distribution of answers
+    conn = sqlite3.connect('quiz.db')
+    answer_dist = conn.execute('''
+        SELECT correcta, COUNT(*) as count 
+        FROM preguntas 
+        GROUP BY correcta 
+        ORDER BY correcta
+    ''').fetchall()
+    
+    print(f"\n📊 Distribución de respuestas correctas:")
+    for answer, count in answer_dist:
+        print(f"   {answer.upper()}: {count} preguntas ({count/final_count*100:.1f}%)")
+    
+    conn.close()
 
 if __name__ == '__main__':
     populate_database()
