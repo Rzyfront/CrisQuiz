@@ -50,7 +50,7 @@ Tu aplicación estará disponible en: `https://yourusername.pythonanywhere.com`
 - **Ranking**: `/ranking`
 
 ## Características:
-- ✅ 69 preguntas de la Policía Nacional
+- ✅ 211 preguntas de la Policía Nacional
 - ✅ Sistema de registro de usuarios
 - ✅ Respuestas inmediatas (correcta/incorrecta)
 - ✅ Seguimiento del progreso
