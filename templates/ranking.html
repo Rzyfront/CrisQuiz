@@ -107,8 +107,8 @@
                                             {% else %}bg-danger{% endif %}" 
                                             role="progressbar" 
                                             style="width: {{ resultado.porcentaje }}%">
-                                            <small><strong>{{ resultado.porcentaje }}%</strong></small>
                                         </div>
+                                        <span class="progress-text-overlay">{{ resultado.porcentaje }}%</span>
                                     </div>
                                 </div>
                             </td>
@@ -281,10 +281,40 @@
 
 .progress-container .progress {
     background-color: #e9ecef;
+    position: relative;
 }
 
 .progress-mobile {
     min-width: 80px;
+}
+
+/* Mejorar legibilidad del texto en barras de progreso */
+.progress-bar {
+    position: relative;
+    overflow: visible;
+}
+
+/* Texto superpuesto siempre visible */
+.progress-text-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #333;
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-shadow: 
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 0 3px rgba(255,255,255,0.8);
+    z-index: 10;
+}
+
+/* Para porcentajes muy bajos, mostrar el texto fuera de la barra */
+.progress-container {
+    position: relative;
 }
 
 .player-info {
