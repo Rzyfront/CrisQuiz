@@ -355,21 +355,25 @@ def resultado(usuario_id):
 def ranking():
     """Mostrar ranking de mejores puntajes"""
     conn = get_db_connection()
-      # Obtener ranking de usuarios con sus puntajes
+    
+    # Obtener el total de preguntas disponibles
+    total_preguntas = conn.execute('SELECT COUNT(*) as count FROM preguntas').fetchone()['count']
+    
+    # Obtener ranking de usuarios con sus puntajes (calculado sobre el total de preguntas)
     ranking_data = conn.execute('''
         SELECT 
             u.nombre,
             u.fecha,
             COUNT(r.id) as total_respuestas,
             SUM(CASE WHEN r.es_correcta = 1 THEN 1 ELSE 0 END) as correctas,
-            ROUND(SUM(CASE WHEN r.es_correcta = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(r.id), 2) as porcentaje
+            ROUND(SUM(CASE WHEN r.es_correcta = 1 THEN 1 ELSE 0 END) * 100.0 / ?, 2) as porcentaje
         FROM usuarios u
         LEFT JOIN respuestas r ON u.id = r.usuario_id
         GROUP BY u.id, u.nombre, u.fecha
         HAVING COUNT(r.id) > 0
         ORDER BY correctas DESC, porcentaje DESC, u.fecha ASC
         LIMIT 20
-    ''').fetchall()
+    ''', (total_preguntas,)).fetchall()
     
     # Convertir fechas string a datetime objects
     ranking_list = []
