@@ -52,19 +52,23 @@
                             </div>
                         </button>
                         
+                        {% if pregunta.opcion_c and pregunta.opcion_c.strip() %}
                         <button type="submit" name="respuesta" value="c" class="btn option-btn">
                             <div class="d-flex align-items-center">
                                 <span class="badge me-3" style="background-color: #3300cc; color: white;">C</span>
                                 <span>{{ pregunta.opcion_c }}</span>
                             </div>
                         </button>
+                        {% endif %}
                         
+                        {% if pregunta.opcion_d and pregunta.opcion_d.strip() %}
                         <button type="submit" name="respuesta" value="d" class="btn option-btn">
                             <div class="d-flex align-items-center">
                                 <span class="badge me-3" style="background-color: #3300cc; color: white;">D</span>
                                 <span>{{ pregunta.opcion_d }}</span>
                             </div>
                         </button>
+                        {% endif %}
                     </div>
                 </form>
                 {% else %}

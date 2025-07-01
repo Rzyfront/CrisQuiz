@@ -88,6 +88,90 @@
                 <i class="fas fa-home me-2"></i>Volver al Inicio
             </a>
         </div>
+
+        <!-- Detalles de respuestas incorrectas -->
+        {% if respuestas_incorrectas %}
+        <div class="mt-5">
+            <h4 class="mb-3">
+                <i class="fas fa-times-circle text-danger me-2"></i>
+                Respuestas Incorrectas ({{ respuestas_incorrectas|length }})
+            </h4>
+            
+            <div class="accordion" id="respuestasIncorrectas">
+                {% for respuesta in respuestas_incorrectas %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ respuesta.id }}">
+                        <button class="accordion-button collapsed" type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse{{ respuesta.id }}" 
+                                aria-expanded="false" 
+                                aria-controls="collapse{{ respuesta.id }}">
+                            <div class="w-100">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-danger">Pregunta {{ respuesta.id }}</span>
+                                    <small class="text-muted">
+                                        Tu respuesta: {{ respuesta.respuesta_usuario.upper() }} | 
+                                        Correcta: {{ respuesta.correcta.upper() }}
+                                    </small>
+                                </div>
+                                <div class="mt-1">
+                                    <small class="text-muted">{{ respuesta.texto[:100] }}{% if respuesta.texto|length > 100 %}...{% endif %}</small>
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ respuesta.id }}" 
+                         class="accordion-collapse collapse" 
+                         aria-labelledby="heading{{ respuesta.id }}" 
+                         data-bs-parent="#respuestasIncorrectas">
+                        <div class="accordion-body">
+                            <div class="mb-3">
+                                <h6 class="fw-bold">Pregunta:</h6>
+                                <p>{{ respuesta.texto }}</p>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="fw-bold">Opciones:</h6>
+                                    <div class="options-review">
+                                        <div class="option-item {% if respuesta.respuesta_usuario == 'a' %}user-answer{% endif %} {% if respuesta.correcta == 'a' %}correct-answer{% endif %}">
+                                            <span class="option-label">A.</span> {{ respuesta.opcion_a }}
+                                        </div>
+                                        <div class="option-item {% if respuesta.respuesta_usuario == 'b' %}user-answer{% endif %} {% if respuesta.correcta == 'b' %}correct-answer{% endif %}">
+                                            <span class="option-label">B.</span> {{ respuesta.opcion_b }}
+                                        </div>
+                                        {% if respuesta.opcion_c and respuesta.opcion_c.strip() %}
+                                        <div class="option-item {% if respuesta.respuesta_usuario == 'c' %}user-answer{% endif %} {% if respuesta.correcta == 'c' %}correct-answer{% endif %}">
+                                            <span class="option-label">C.</span> {{ respuesta.opcion_c }}
+                                        </div>
+                                        {% endif %}
+                                        {% if respuesta.opcion_d and respuesta.opcion_d.strip() %}
+                                        <div class="option-item {% if respuesta.respuesta_usuario == 'd' %}user-answer{% endif %} {% if respuesta.correcta == 'd' %}correct-answer{% endif %}">
+                                            <span class="option-label">D.</span> {{ respuesta.opcion_d }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="answer-summary">
+                                        <div class="answer-item incorrect">
+                                            <i class="fas fa-times-circle me-2"></i>
+                                            <strong>Tu respuesta:</strong> {{ respuesta.respuesta_usuario.upper() }}
+                                        </div>
+                                        <div class="answer-item correct">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <strong>Respuesta correcta:</strong> {{ respuesta.correcta.upper() }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
           <!-- Información adicional -->
         <div class="mt-4 pt-4 border-top">
             <div class="row text-center">
@@ -185,6 +269,54 @@
 
 .info-item small {
     font-size: 0.8rem;
+}
+
+/* Estilos para respuestas incorrectas */
+.options-review .option-item {
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.options-review .option-label {
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.options-review .user-answer {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.options-review .correct-answer {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.answer-summary {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.answer-item {
+    padding: 0.5rem 0;
+}
+
+.answer-item.incorrect {
+    color: #dc3545;
+}
+
+.answer-item.correct {
+    color: #28a745;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #212529;
 }
 
 /* Responsive adjustments */

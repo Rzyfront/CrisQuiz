@@ -313,7 +313,25 @@ def resultado(usuario_id):
             SUM(CASE WHEN es_correcta = 1 THEN 1 ELSE 0 END) as correctas,
             SUM(CASE WHEN es_correcta = 0 THEN 1 ELSE 0 END) as incorrectas
         FROM respuestas 
-        WHERE usuario_id = ?    ''', (usuario_id,)).fetchone()
+        WHERE usuario_id = ?
+    ''', (usuario_id,)).fetchone()
+    
+    # Obtener detalles de las respuestas incorrectas
+    respuestas_incorrectas = conn.execute('''
+        SELECT 
+            p.id,
+            p.texto,
+            p.opcion_a,
+            p.opcion_b,
+            p.opcion_c,
+            p.opcion_d,
+            p.correcta,
+            r.respuesta_usuario
+        FROM respuestas r
+        JOIN preguntas p ON r.pregunta_id = p.id
+        WHERE r.usuario_id = ? AND r.es_correcta = 0
+        ORDER BY p.id
+    ''', (usuario_id,)).fetchall()
     
     total_preguntas = conn.execute('SELECT COUNT(*) as count FROM preguntas').fetchone()['count']
     
@@ -329,7 +347,9 @@ def resultado(usuario_id):
                          total_preguntas=total_preguntas,
                          total=total_preguntas,
                          porcentaje=round(porcentaje, 2),
-                         correctas=correctas)
+                         correctas=correctas,
+                         incorrectas=stats['incorrectas'] if stats['incorrectas'] is not None else 0,
+                         respuestas_incorrectas=respuestas_incorrectas)
 
 @app.route('/ranking')
 def ranking():

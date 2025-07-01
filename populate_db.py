@@ -1,133 +1,83 @@
-import sqlite3
-import re
-import os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Script para poblar la base de datos con preguntas del archivo Questions.md
+"""
 
 import sqlite3
 import re
 import os
 
-def parse_questions_from_md(filename):
-    """Parse questions from Questions.md file with improved parsing"""
-    questions = []
+def leer_preguntas_desde_archivo(archivo):
+    """
+    Lee las preguntas del archivo Questions.md y las parsea
+    """
+    preguntas = []
     
-    if not os.path.exists(filename):
-        print(f"Error: {filename} no encontrado")
-        return questions
-    
-    with open(filename, 'r', encoding='utf-8') as file:
-        content = file.read()
-    
-    # Dividir el contenido en bloques de preguntas
-    # Buscar patrones como "1. " seguido de texto de pregunta
-    question_pattern = r'(\d+)\.\s*([^#]*?)(?=\d+\.\s|$)'
-    
-    # Split content into lines for easier processing
-    lines = content.split('\n')
-    
-    current_question = None
-    current_options = {}
-    current_answer = None
-    in_options_block = False
-    
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
+    try:
+        with open(archivo, 'r', encoding='utf-8') as f:
+            contenido = f.read()
         
-        # Skip empty lines and headers
-        if not line or line.startswith('#') or 'PROCESO DE ENTRENAMIENTO' in line or 'POLICÍA NACIONAL' in line:
-            i += 1
-            continue
+        # Patrón para encontrar preguntas con formato **número.** 
+        patron_pregunta = r'\*\*(\d+)\.\*\*\s*(.*?)\n\n```\n(.*?)\n```\n```\nRespuesta:\s*([ABCD])\n```'
         
-        # Check if this is a question line (starts with number.)
-        question_match = re.match(r'^(\d+)\.\s*(.*)', line)
-        if question_match:
-            # Save previous question if we have one complete
-            if current_question and len(current_options) == 4 and current_answer:
-                questions.append({
-                    'texto': current_question.strip(),
-                    'opcion_a': current_options.get('a', ''),
-                    'opcion_b': current_options.get('b', ''),
-                    'opcion_c': current_options.get('c', ''),
-                    'opcion_d': current_options.get('d', ''),
-                    'correcta': current_answer.lower()
-                })
+        matches = re.findall(patron_pregunta, contenido, re.DOTALL)
+        
+        for match in matches:
+            numero = int(match[0])
+            texto_pregunta = match[1].strip()
+            opciones_texto = match[2].strip()
+            respuesta_correcta = match[3].strip()
             
-            # Start new question
-            current_question = question_match.group(2)
-            current_options = {}
-            current_answer = None
-            in_options_block = False
+            # Parsear las opciones
+            lineas_opciones = opciones_texto.split('\n')
+            opciones = {'a': '', 'b': '', 'c': '', 'd': ''}
             
-            # Continue reading question text if it spans multiple lines
-            i += 1
-            while i < len(lines) and not lines[i].strip().startswith('```') and not re.match(r'^\d+\.', lines[i].strip()):
-                if lines[i].strip() and not lines[i].strip().startswith('#'):
-                    current_question += ' ' + lines[i].strip()
-                i += 1
-            continue
-        
-        # Check for start of options block
-        if line == '```' and not in_options_block:
-            in_options_block = True
-            i += 1
-            continue
-        
-        # Check for end of options block or answer block
-        if line == '```' and in_options_block:
-            in_options_block = False
-            i += 1
-            continue
-        
-        # Parse options inside code blocks
-        if in_options_block:
-            option_match = re.match(r'^([abcd])[\.\)]\s*(.*)', line)
-            if option_match:
-                option_letter = option_match.group(1)
-                option_text = option_match.group(2).strip()
-                current_options[option_letter] = option_text
-            elif line.startswith('Respuesta:'):
-                answer_match = re.search(r'Respuesta:\s*([ABCD])', line)
-                if answer_match:
-                    current_answer = answer_match.group(1)
-        
-        # Parse answers outside code blocks
-        elif line.startswith('Respuesta:'):
-            answer_match = re.search(r'Respuesta:\s*([ABCD])', line)
-            if answer_match:
-                current_answer = answer_match.group(1)
-        
-        i += 1
+            for linea in lineas_opciones:
+                linea = linea.strip()
+                if linea.startswith('a.'):
+                    opciones['a'] = linea[2:].strip()
+                elif linea.startswith('b.'):
+                    opciones['b'] = linea[2:].strip()
+                elif linea.startswith('c.'):
+                    opciones['c'] = linea[2:].strip()
+                elif linea.startswith('d.'):
+                    opciones['d'] = linea[2:].strip()
+            
+            # Verificar que tenemos todas las opciones
+            if all(opciones.values()):
+                pregunta = {
+                    'numero': numero,
+                    'texto': texto_pregunta,
+                    'opcion_a': opciones['a'],
+                    'opcion_b': opciones['b'],
+                    'opcion_c': opciones['c'],
+                    'opcion_d': opciones['d'],
+                    'correcta': respuesta_correcta.lower()  # Convertir a minúsculas
+                }
+                preguntas.append(pregunta)
+                print(f"✓ Pregunta {numero} parseada correctamente")
+            else:
+                print(f"⚠ Pregunta {numero} tiene opciones incompletas, se omite")
     
-    # Don't forget the last question
-    if current_question and len(current_options) == 4 and current_answer:
-        questions.append({
-            'texto': current_question.strip(),
-            'opcion_a': current_options.get('a', ''),
-            'opcion_b': current_options.get('b', ''),
-            'opcion_c': current_options.get('c', ''),
-            'opcion_d': current_options.get('d', ''),
-            'correcta': current_answer.lower()
-        })
+    except FileNotFoundError:
+        print(f"❌ Error: No se encontró el archivo {archivo}")
+        return []
+    except Exception as e:
+        print(f"❌ Error al leer el archivo: {e}")
+        return []
     
-    return questions
+    return preguntas
 
-def populate_database():
-    """Populate the database with questions from Questions.md"""
-    
-    # Initialize database
+def crear_base_datos():
+    """
+    Crea la base de datos y la tabla de preguntas si no existe
+    """
     conn = sqlite3.connect('quiz.db')
-    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
     
-    # Create tables if they don't exist
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.execute('''
+    # Crear tabla de preguntas
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS preguntas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             texto TEXT NOT NULL,
@@ -135,102 +85,113 @@ def populate_database():
             opcion_b TEXT NOT NULL,
             opcion_c TEXT NOT NULL,
             opcion_d TEXT NOT NULL,
-            correcta TEXT NOT NULL CHECK(correcta IN ('a', 'b', 'c', 'd'))
+            correcta TEXT NOT NULL
         )
     ''')
     
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS respuestas (
+    # Crear tabla de resultados
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS resultados (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL,
-            pregunta_id INTEGER NOT NULL,
-            respuesta_usuario TEXT NOT NULL CHECK(respuesta_usuario IN ('a', 'b', 'c', 'd')),
-            es_correcta BOOLEAN NOT NULL,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
-            FOREIGN KEY (pregunta_id) REFERENCES preguntas (id)
+            nombre TEXT NOT NULL,
+            puntaje INTEGER NOT NULL,
+            total_preguntas INTEGER NOT NULL,
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
-    # Check if questions already exist
-    existing_count = conn.execute('SELECT COUNT(*) FROM preguntas').fetchone()[0]
-    if existing_count > 0:
-        print(f"Ya existen {existing_count} preguntas en la base de datos.")
-        conn.execute('DELETE FROM respuestas')
-        conn.execute('DELETE FROM preguntas')
-        print("Preguntas existentes eliminadas.")
+    conn.commit()
+    return conn
+
+def insertar_preguntas(conn, preguntas):
+    """
+    Inserta las preguntas en la base de datos
+    """
+    cursor = conn.cursor()
     
-    # Parse questions from file
-    print("Analizando preguntas de Questions.md...")
-    questions = parse_questions_from_md('Questions.md')
+    # Limpiar tabla existente
+    cursor.execute('DELETE FROM preguntas')
+    cursor.execute('DELETE FROM sqlite_sequence WHERE name="preguntas"')
     
-    if not questions:
-        print("No se encontraron preguntas válidas en Questions.md")
-        conn.close()
-        return
-    
-    print(f"✅ Se encontraron {len(questions)} preguntas válidas. Insertando en la base de datos...")
-    
-    # Insert questions
-    inserted_count = 0
-    for i, question in enumerate(questions, 1):
+    # Insertar preguntas
+    insertadas = 0
+    for pregunta in preguntas:
         try:
-            conn.execute('''
+            cursor.execute('''
                 INSERT INTO preguntas (texto, opcion_a, opcion_b, opcion_c, opcion_d, correcta)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (
-                question['texto'],
-                question['opcion_a'],
-                question['opcion_b'],
-                question['opcion_c'],
-                question['opcion_d'],
-                question['correcta']
+                pregunta['texto'],
+                pregunta['opcion_a'],
+                pregunta['opcion_b'],
+                pregunta['opcion_c'],
+                pregunta['opcion_d'],
+                pregunta['correcta']
             ))
-            inserted_count += 1
-            
-            # Show progress every 25 questions
-            if inserted_count % 25 == 0:
-                print(f"Insertadas {inserted_count} preguntas...")
-                
+            insertadas += 1
         except Exception as e:
-            print(f"❌ Error insertando pregunta {i}: {e}")
-            print(f"   Pregunta: {question['texto'][:80]}...")
-            continue
+            print(f"❌ Error al insertar pregunta {pregunta['numero']}: {e}")
     
     conn.commit()
-    
-    # Verify insertion
-    final_count = conn.execute('SELECT COUNT(*) FROM preguntas').fetchone()[0]
-    print(f"✅ Se insertaron {final_count} preguntas exitosamente.")
-    
-    # Show some sample questions
-    if final_count > 0:
-        print(f"\n📋 Ejemplos de preguntas insertadas:")
-        samples = conn.execute('SELECT * FROM preguntas LIMIT 3').fetchall()
-        for i, sample in enumerate(samples, 1):
-            print(f"\n{i}. {sample['texto']}")
-            print(f"   a) {sample['opcion_a']}")
-            print(f"   b) {sample['opcion_b']}")
-            print(f"   c) {sample['opcion_c']}")
-            print(f"   d) {sample['opcion_d']}")
-            print(f"   Respuesta correcta: {sample['correcta'].upper()}")
-    
-    conn.close()
-    print(f"\n🎉 Base de datos poblada exitosamente con {final_count} preguntas!")
-    
-    # Show distribution of answers
-    conn = sqlite3.connect('quiz.db')
-    answer_dist = conn.execute('''
-        SELECT correcta, COUNT(*) as count 
-        FROM preguntas 
-        GROUP BY correcta 
-        ORDER BY correcta
-    ''').fetchall()
-    
-    print(f"\n📊 Distribución de respuestas correctas:")
-    for answer, count in answer_dist:
-        print(f"   {answer.upper()}: {count} preguntas ({count/final_count*100:.1f}%)")
-    
-    conn.close()
+    return insertadas
 
-if __name__ == '__main__':
-    populate_database()
+def verificar_insercion(conn):
+    """
+    Verifica que las preguntas se insertaron correctamente
+    """
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM preguntas')
+    total = cursor.fetchone()[0]
+    
+    print(f"\n📊 Verificación:")
+    print(f"Total de preguntas en la base de datos: {total}")
+    
+    # Mostrar algunas preguntas de ejemplo
+    cursor.execute('SELECT id, texto, correcta FROM preguntas LIMIT 3')
+    ejemplos = cursor.fetchall()
+    
+    print("\n📝 Ejemplos de preguntas insertadas:")
+    for i, (id_pregunta, texto, correcta) in enumerate(ejemplos, 1):
+        texto_corto = texto[:80] + "..." if len(texto) > 80 else texto
+        print(f"{i}. ID {id_pregunta}: {texto_corto} (Respuesta: {correcta})")
+
+def main():
+    print("🚀 Iniciando población de la base de datos...")
+    
+    # Verificar que existe el archivo de preguntas
+    archivo_preguntas = 'Questions.md'
+    if not os.path.exists(archivo_preguntas):
+        print(f"❌ Error: No se encontró el archivo {archivo_preguntas}")
+        return
+    
+    # Leer preguntas del archivo
+    print(f"📖 Leyendo preguntas desde {archivo_preguntas}...")
+    preguntas = leer_preguntas_desde_archivo(archivo_preguntas)
+    
+    if not preguntas:
+        print("❌ No se encontraron preguntas válidas en el archivo")
+        return
+    
+    print(f"✅ Se encontraron {len(preguntas)} preguntas válidas")
+    
+    # Crear/conectar a la base de datos
+    print("\n🗄️ Creando/conectando a la base de datos...")
+    conn = crear_base_datos()
+    
+    # Insertar preguntas
+    print("\n💾 Insertando preguntas en la base de datos...")
+    insertadas = insertar_preguntas(conn, preguntas)
+    
+    print(f"✅ Se insertaron {insertadas} preguntas correctamente")
+    
+    # Verificar inserción
+    verificar_insercion(conn)
+    
+    # Cerrar conexión
+    conn.close()
+    
+    print("\n🎉 ¡Población de la base de datos completada exitosamente!")
+    print("Ahora puedes ejecutar la aplicación con: python app.py")
+
+if __name__ == "__main__":
+    main()
